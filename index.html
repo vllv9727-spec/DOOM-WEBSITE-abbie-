@@ -1,0 +1,129 @@
+<!-- language: HTML, file: index.html, target: любой современный браузер -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>DOOM by Abbie Apple</title>
+<style>
+  body {
+    background: #000; margin: 0; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; height: 100vh;
+    font-family: monospace; color: #fff; overflow: hidden;
+  }
+  
+  /* Экран загрузки */
+  #intro-screen {
+    position: absolute; inset: 0; background: #111;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    z-index: 10; transition: opacity 0.5s;
+  }
+  
+  /* Стили для твоей картинки */
+  #intro-screen img {
+    width: 300px;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 20px;
+    border: 4px solid #333;
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+    margin-bottom: 20px;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  /* Текст создателя */
+  #intro-screen h1 {
+    font-size: 24px; margin: 0; color: #fff; letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  }
+  #intro-screen p {
+    color: #888; margin-top: 10px; font-size: 14px;
+  }
+
+  /* Кнопка запуска */
+  #start-btn {
+    margin-top: 30px; padding: 12px 30px; font-size: 18px; font-family: inherit;
+    background: #000; color: #fff; border: 2px solid #fff; cursor: pointer;
+    transition: all 0.2s;
+  }
+  #start-btn:hover { background: #fff; color: #000; }
+
+  /* Скрываем игру до старта */
+  #game-container { display: none; }
+  #game { image-rendering: pixelated; border: 2px solid #333; cursor: crosshair; }
+  #hint { position: fixed; bottom: 8px; color: #555; font-size: 12px; }
+
+  /* Анимация парения картинки */
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ЭКРАН ЗАГРУЗКИ -->
+<div id="intro-screen">
+  <!-- ТУТ ТВОЯ КАРТИНКА -->
+  <!-- Замени ссылку ниже на путь к твоей картинке, если положишь её рядом с HTML -->
+  <img src="https://i.imgur.com/your_image_here.jpg" alt="Abbie Apple Art" id="art-img">
+  
+  <h1>ABBIE APPLE</h1>
+  <p>Presenting DOOM in Browser</p>
+  
+  <button id="start-btn">ЗАПУСТИТЬ DOOM</button>
+</div>
+
+<!-- КОНТЕЙНЕР С ИГРОЙ -->
+<div id="game-container">
+  <canvas id="game"></canvas>
+</div>
+<div id="hint" style="display:none;">Кликни по экрану · Стрелки = движение · Ctrl = огонь · Space = открыть · Esc = меню</div>
+
+<script type="module">
+// Логика кнопки старта
+const startBtn = document.getElementById('start-btn');
+const introScreen = document.getElementById('intro-screen');
+const gameContainer = document.getElementById('game-container');
+const hint = document.getElementById('hint');
+
+startBtn.addEventListener('click', async () => {
+  // Скрываем заставку
+  introScreen.style.opacity = '0';
+  setTimeout(() => { introScreen.style.display = 'none'; }, 500);
+  
+  // Показываем игру
+  gameContainer.style.display = 'block';
+  hint.style.display = 'block';
+
+  // Запускаем DOOM
+  const { DOOM } = await import('https://cdn.jsdelivr.net/npm/wasm-doom@1.2.0/+esm');
+
+  const screenWidth  = 640;
+  const screenHeight = 400;
+
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  canvas.width  = screenWidth;
+  canvas.height = screenHeight;
+
+  const game = new DOOM({
+    screenWidth,
+    screenHeight,
+    keyboardTarget: document.body,
+    enableLogs: false,
+    onFrameRender: ({ screen }) => {
+      const frame = new ImageData(new Uint8ClampedArray(screen), screenWidth, screenHeight);
+      ctx.putImageData(frame, 0, 0);
+    },
+  });
+
+  await game.start();
+});
+
+// Обработка загрузки картинки (если ты захочешь использовать локальный файл)
+// Чтобы это работало, просто положи картинку в ту же папку и назови её art.png,
+// а в теге <img> выше поменяй src на "art.png".
+</script>
+</body>
+</html>
